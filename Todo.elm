@@ -2,7 +2,7 @@ module Todo exposing (..)
 
 import Html exposing (Html, a, strong, span, footer, label, button, form, header, section, text, input, li, ul, div, h1, h4)
 import Html.App as App
-import Html.Attributes exposing (href, checked, type', value, placeholder, class)
+import Html.Attributes exposing (href, checked, type', value, placeholder, class, classList)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import String
 import List exposing (filter, length)
@@ -142,16 +142,9 @@ view model =
 buildTodoItems : List Todo -> List (Html Msg)
 buildTodoItems todos =
     let
-        isTodoDone : Todo -> String
-        isTodoDone { isDone } =
-            if isDone then
-                "completed"
-            else
-                ""
-
         makeTodoItem : Todo -> Html Msg
         makeTodoItem todo =
-            li [ class (isTodoDone todo) ]
+            li [ classList [ ( "completed", todo.isDone ) ] ]
                 [ div [ class "view" ]
                     [ input
                         [ class "toggle"
