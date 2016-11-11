@@ -1,10 +1,11 @@
 module Todo exposing (..)
 
-import Html exposing (Html, label, button, form, header, section, text, input, li, ul, div, h1, h4)
+import Html exposing (Html, a, strong, span, footer, label, button, form, header, section, text, input, li, ul, div, h1, h4)
 import Html.App as App
-import Html.Attributes exposing (checked, type', value, placeholder, class)
+import Html.Attributes exposing (href, checked, type', value, placeholder, class)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import String
+import List exposing (filter, length)
 
 
 -- Model
@@ -60,7 +61,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Input str ->
-            ( { model | currentInput = Debug.log "Current Input: " str }, Cmd.none )
+            ( { model | currentInput = str }, Cmd.none )
 
         ToggleDone id ->
             let
@@ -119,7 +120,19 @@ view model =
                     ]
                 ]
             , section [ class "main" ]
-                [ ul [ class "todo-list" ] (buildTodoItems model.todos)
+                [ ul [ class "todo-list" ] (buildTodoItems model.todos) ]
+            , footer [ class "footer" ]
+                [ span [ class "todo-count" ]
+                    [ strong []
+                        [ text <| toString <| length <| filter (\t -> not t.isDone) model.todos
+                        ]
+                    , text " item left"
+                    ]
+                , ul [ class "filters" ]
+                    [ li [] [ a [] [ text "All" ] ]
+                    , li [] [ a [] [ text "Active" ] ]
+                    , li [] [ a [] [ text "Completed" ] ]
+                    ]
                 ]
             ]
         , h4 [] [ text <| toString model ]
