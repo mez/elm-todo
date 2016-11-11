@@ -87,7 +87,6 @@ update msg model =
         MakeNewTodo ->
             if not (String.isEmpty model.currentInput) then
                 let
-                    newTodo : Todo
                     newTodo =
                         { id = List.length model.todos, isDone = False, body = model.currentInput }
                 in
@@ -107,35 +106,44 @@ view : Model -> Html Msg
 view model =
     div [ class "todomvc-wrapper" ]
         [ section [ class "todoapp" ]
-            [ header [ class "header" ]
-                [ h1 [] [ text "Elm Todo" ]
-                , form [ onSubmit MakeNewTodo ]
-                    [ input
-                        [ class "new-todo"
-                        , placeholder "What needs to be done?"
-                        , onInput Input
-                        , value model.currentInput
-                        ]
-                        []
-                    ]
-                ]
+            [ buildHeader model.currentInput
             , section [ class "main" ]
-                [ ul [ class "todo-list" ] (buildTodoItems model.todos) ]
-            , footer [ class "footer" ]
-                [ span [ class "todo-count" ]
-                    [ strong []
-                        [ text <| toString <| length <| filter (\t -> not t.isDone) model.todos
-                        ]
-                    , text " item left"
-                    ]
-                , ul [ class "filters" ]
-                    [ li [] [ a [] [ text "All" ] ]
-                    , li [] [ a [] [ text "Active" ] ]
-                    , li [] [ a [] [ text "Completed" ] ]
-                    ]
-                ]
+                [ ul [ class "todo-list" ] <| buildTodoItems model.todos ]
+            , buildFooter <| length <| filter (\t -> not t.isDone) model.todos
             ]
         , h4 [] [ text <| toString model ]
+        ]
+
+
+buildHeader : String -> Html Msg
+buildHeader currentInput =
+    header [ class "header" ]
+        [ h1 [] [ text "Elm Todo" ]
+        , form [ onSubmit MakeNewTodo ]
+            [ input
+                [ class "new-todo"
+                , placeholder "What needs to be done?"
+                , onInput Input
+                , value currentInput
+                ]
+                []
+            ]
+        ]
+
+
+buildFooter : Int -> Html Msg
+buildFooter todosLeft =
+    footer [ class "footer" ]
+        [ span [ class "todo-count" ]
+            [ strong []
+                [ text <| toString todosLeft ]
+            , text " item left"
+            ]
+        , ul [ class "filters" ]
+            [ li [] [ a [] [ text "All" ] ]
+            , li [] [ a [] [ text "Active" ] ]
+            , li [] [ a [] [ text "Completed" ] ]
+            ]
         ]
 
 
