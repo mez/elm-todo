@@ -2,7 +2,7 @@ module Todo exposing (..)
 
 import Html exposing (Html, a, strong, span, footer, label, button, form, header, section, text, input, li, ul, div, h1, h4)
 import Html.App as App
-import Html.Attributes exposing (hidden, href, checked, type', value, placeholder, class, classList)
+import Html.Attributes exposing (for, name, hidden, href, checked, type', value, placeholder, class, classList)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import String
 import List exposing (filter, length, map)
@@ -51,6 +51,7 @@ type Msg
     | ClearCompleted
     | Input String
     | DestroyTodo TodoID
+    | ToggleAllCompleted
 
 
 
@@ -103,6 +104,18 @@ update msg model =
             in
                 ( { model | todos = updatedTodos }, Cmd.none )
 
+        ToggleAllCompleted ->
+            let
+                -- first we need to check if all are already completed.
+                allTodosDone =
+                    List.all .isDone model.todos
+
+                -- now go through todos and do opposite
+                updatedTodos =
+                    List.map (\t -> { t | isDone = not allTodosDone }) model.todos
+            in
+                ( { model | todos = updatedTodos }, Cmd.none )
+
 
 
 -- View
@@ -113,12 +126,24 @@ view model =
     div [ class "todomvc-wrapper" ]
         [ section [ class "todoapp" ]
             [ buildHeader model.currentInput
-            , section [ class "main" ]
-                [ ul [ class "todo-list" ] <| buildTodoItems model.todos model.currentFilter ]
+            , buildMainSection model
             , buildFooter model.todos model.currentFilter
             ]
         , h4 [] [ text <| toString model ]
         ]
+
+
+buildMainSection : Model -> Html Msg
+buildMainSection model =
+    let
+        allTodosDone =
+            List.all .isDone model.todos
+    in
+        section [ hidden (List.length model.todos == 0), class "main" ]
+            [ input [ onClick ToggleAllCompleted, checked allTodosDone, class "toggle-all", type' "checkbox", name "toggle" ] []
+            , label [ for "toggle-all" ] [ text "Mark all as complete." ]
+            , ul [ class "todo-list" ] <| buildTodoItems model.todos model.currentFilter
+            ]
 
 
 buildHeader : String -> Html Msg
@@ -146,14 +171,15 @@ buildFooter todos currentFilter =
         todosCompleted =
             List.length todos - todosLeft
     in
-        footer [ class "footer" ]
+        footer [ hidden (List.length todos == 0), class "footer" ]
             [ span [ class "todo-count" ]
                 [ strong []
                     [ text <| toString todosLeft ]
                 , text " item left"
                 ]
             , ul [ class "filters" ] <| List.map (buildVisibilityFilterButton currentFilter) [ All, Active, Completed ]
-            , button [ onClick ClearCompleted, class "clear-completed", hidden (todosCompleted == 0) ] [ text <| "Clear completed (" ++ (toString todosCompleted) ++ ")" ]
+            , button [ onClick ClearCompleted, class "clear-completed", hidden (todosCompleted == 0) ]
+                [ text <| "Clear completed (" ++ (toString todosCompleted) ++ ")" ]
             ]
 
 
