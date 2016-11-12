@@ -126,23 +126,23 @@ view model =
     div [ class "todomvc-wrapper" ]
         [ section [ class "todoapp" ]
             [ buildHeader model.currentInput
-            , buildMainSection model
+            , buildMainSection model.todos model.currentFilter
             , buildFooter model.todos model.currentFilter
             ]
         , h4 [] [ text <| toString model ]
         ]
 
 
-buildMainSection : Model -> Html Msg
-buildMainSection model =
+buildMainSection : List Todo -> VisibilityFilter -> Html Msg
+buildMainSection todos currentFilter =
     let
         allTodosDone =
-            List.all .isDone model.todos
+            List.all .isDone todos
     in
-        section [ hidden (List.length model.todos == 0), class "main" ]
+        section [ hidden (List.length todos == 0), class "main" ]
             [ input [ onClick ToggleAllCompleted, checked allTodosDone, class "toggle-all", type' "checkbox", name "toggle" ] []
             , label [ for "toggle-all" ] [ text "Mark all as complete." ]
-            , ul [ class "todo-list" ] <| buildTodoItems model.todos model.currentFilter
+            , ul [ class "todo-list" ] <| buildTodoItems todos currentFilter
             ]
 
 
