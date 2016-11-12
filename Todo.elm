@@ -2,7 +2,7 @@ module Todo exposing (..)
 
 import Html exposing (Html, a, strong, span, footer, label, button, form, header, section, text, input, li, ul, div, h1, h4)
 import Html.App as App
-import Html.Attributes exposing (href, checked, type', value, placeholder, class, classList)
+import Html.Attributes exposing (hidden, href, checked, type', value, placeholder, class, classList)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import String
 import List exposing (filter, length, map)
@@ -96,8 +96,12 @@ update msg model =
         ChangeVisibility desiredFilter ->
             ( { model | currentFilter = desiredFilter }, Cmd.none )
 
-        _ ->
-            ( model, Cmd.none )
+        ClearCompleted ->
+            let
+                updatedTodos =
+                    List.filter (\t -> not t.isDone) model.todos
+            in
+                ( { model | todos = updatedTodos }, Cmd.none )
 
 
 
@@ -111,7 +115,7 @@ view model =
             [ buildHeader model.currentInput
             , section [ class "main" ]
                 [ ul [ class "todo-list" ] <| buildTodoItems model.todos model.currentFilter ]
-            , buildFooter (length <| filter (\t -> not t.isDone) model.todos) model.currentFilter
+            , buildFooter model.todos model.currentFilter
             ]
         , h4 [] [ text <| toString model ]
         ]
@@ -133,16 +137,24 @@ buildHeader currentInput =
         ]
 
 
-buildFooter : Int -> VisibilityFilter -> Html Msg
-buildFooter todosLeft currentFilter =
-    footer [ class "footer" ]
-        [ span [ class "todo-count" ]
-            [ strong []
-                [ text <| toString todosLeft ]
-            , text " item left"
+buildFooter : List Todo -> VisibilityFilter -> Html Msg
+buildFooter todos currentFilter =
+    let
+        todosLeft =
+            List.length <| List.filter (\t -> not t.isDone) todos
+
+        todosCompleted =
+            List.length todos - todosLeft
+    in
+        footer [ class "footer" ]
+            [ span [ class "todo-count" ]
+                [ strong []
+                    [ text <| toString todosLeft ]
+                , text " item left"
+                ]
+            , ul [ class "filters" ] <| List.map (buildVisibilityFilterButton currentFilter) [ All, Active, Completed ]
+            , button [ onClick ClearCompleted, class "clear-completed", hidden (todosCompleted == 0) ] [ text <| "Clear completed (" ++ (toString todosCompleted) ++ ")" ]
             ]
-        , ul [ class "filters" ] <| List.map (buildVisibilityFilterButton currentFilter) [ All, Active, Completed ]
-        ]
 
 
 buildVisibilityFilterButton : VisibilityFilter -> VisibilityFilter -> Html Msg
