@@ -5,13 +5,13 @@ import Html.App as App
 import Html.Attributes exposing (href, checked, type', value, placeholder, class, classList)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import String
-import List exposing (filter, length)
+import List exposing (filter, length, map)
 
 
 -- Model
 
 
-type Filter
+type VisibilityFilter
     = All
     | Active
     | Completed
@@ -26,7 +26,7 @@ type alias Todo =
 
 type alias Model =
     { todos : List Todo
-    , currentFilter : Filter
+    , currentFilter : VisibilityFilter
     , currentInput : String
     }
 
@@ -46,7 +46,7 @@ type alias TodoID =
 
 type Msg
     = MakeNewTodo
-    | ChangeVisibility Filter
+    | ChangeVisibility VisibilityFilter
     | ToggleDone TodoID
     | ClearCompleted
     | Input String
@@ -65,24 +65,23 @@ update msg model =
 
         ToggleDone id ->
             let
-                newTodos =
-                    List.map
-                        (\todo ->
-                            if todo.id == id then
-                                { todo | isDone = not todo.isDone }
-                            else
-                                todo
-                        )
-                        model.todos
+                findAndToggleTodo todo =
+                    if todo.id == id then
+                        { todo | isDone = not todo.isDone }
+                    else
+                        todo
+
+                updatedTodos =
+                    List.map findAndToggleTodo model.todos
             in
-                ( { model | todos = newTodos }, Cmd.none )
+                ( { model | todos = updatedTodos }, Cmd.none )
 
         DestroyTodo id ->
             let
-                newTodos =
+                updatedTodos =
                     List.filter (\todo -> todo.id /= id) model.todos
             in
-                ( { model | todos = newTodos }, Cmd.none )
+                ( { model | todos = updatedTodos }, Cmd.none )
 
         MakeNewTodo ->
             if not (String.isEmpty model.currentInput) then
@@ -93,6 +92,9 @@ update msg model =
                     ( { model | todos = newTodo :: model.todos, currentInput = "" }, Cmd.none )
             else
                 ( model, Cmd.none )
+
+        ChangeVisibility desiredFilter ->
+            ( { model | currentFilter = desiredFilter }, Cmd.none )
 
         _ ->
             ( model, Cmd.none )
@@ -108,8 +110,8 @@ view model =
         [ section [ class "todoapp" ]
             [ buildHeader model.currentInput
             , section [ class "main" ]
-                [ ul [ class "todo-list" ] <| buildTodoItems model.todos ]
-            , buildFooter <| length <| filter (\t -> not t.isDone) model.todos
+                [ ul [ class "todo-list" ] <| buildTodoItems model.todos model.currentFilter ]
+            , buildFooter (length <| filter (\t -> not t.isDone) model.todos) model.currentFilter
             ]
         , h4 [] [ text <| toString model ]
         ]
@@ -131,26 +133,40 @@ buildHeader currentInput =
         ]
 
 
-buildFooter : Int -> Html Msg
-buildFooter todosLeft =
+buildFooter : Int -> VisibilityFilter -> Html Msg
+buildFooter todosLeft currentFilter =
     footer [ class "footer" ]
         [ span [ class "todo-count" ]
             [ strong []
                 [ text <| toString todosLeft ]
             , text " item left"
             ]
-        , ul [ class "filters" ]
-            [ li [] [ a [] [ text "All" ] ]
-            , li [] [ a [] [ text "Active" ] ]
-            , li [] [ a [] [ text "Completed" ] ]
-            ]
+        , ul [ class "filters" ] <| List.map (buildVisibilityFilterButton currentFilter) [ All, Active, Completed ]
         ]
 
 
-buildTodoItems : List Todo -> List (Html Msg)
-buildTodoItems todos =
+buildVisibilityFilterButton : VisibilityFilter -> VisibilityFilter -> Html Msg
+buildVisibilityFilterButton currentSelectedFilter desiredFilter =
+    li [ onClick (ChangeVisibility desiredFilter) ]
+        [ a [ classList [ ( "selected", desiredFilter == currentSelectedFilter ) ] ]
+            [ text <| toString desiredFilter ]
+        ]
+
+
+buildTodoItems : List Todo -> VisibilityFilter -> List (Html Msg)
+buildTodoItems todos currentFilter =
     let
-        makeTodoItem : Todo -> Html Msg
+        isVisible { isDone } =
+            case currentFilter of
+                All ->
+                    True
+
+                Active ->
+                    not isDone
+
+                Completed ->
+                    isDone
+
         makeTodoItem todo =
             li [ classList [ ( "completed", todo.isDone ) ] ]
                 [ div [ class "view" ]
@@ -166,7 +182,7 @@ buildTodoItems todos =
                     ]
                 ]
     in
-        List.map makeTodoItem todos
+        List.map makeTodoItem <| List.filter isVisible todos
 
 
 
