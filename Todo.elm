@@ -1,8 +1,7 @@
 module Todo exposing (..)
 
 import Html exposing (Html, a, strong, span, footer, label, button, form, header, section, text, input, li, ul, div, h1, h4)
-import Html.App as App
-import Html.Attributes exposing (autofocus, for, name, hidden, href, checked, type', value, placeholder, class, classList)
+import Html.Attributes exposing (autofocus, for, name, hidden, href, checked, type_, value, placeholder, class, classList)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import String
 import List exposing (filter, length, map)
@@ -140,7 +139,7 @@ buildMainSection todos currentFilter =
             List.all .isDone todos
     in
         section [ hidden (List.length todos == 0), class "main" ]
-            [ input [ onClick ToggleAllCompleted, checked allTodosDone, class "toggle-all", type' "checkbox", name "toggle" ] []
+            [ input [ onClick ToggleAllCompleted, checked allTodosDone, class "toggle-all", type_ "checkbox", name "toggle" ] []
             , label [ for "toggle-all" ] [ text "Mark all as complete." ]
             , ul [ class "todo-list" ] <| buildTodoItems todos currentFilter
             ]
@@ -211,7 +210,7 @@ buildTodoItems todos currentFilter =
                 [ div [ class "view" ]
                     [ input
                         [ class "toggle"
-                        , type' "checkbox"
+                        , type_ "checkbox"
                         , (checked todo.isDone)
                         , onClick (ToggleDone todo.id)
                         ]
@@ -228,9 +227,9 @@ buildTodoItems todos currentFilter =
 -- Main Program
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
-    App.program
+    Html.program
         { init = init
         , view = view
         , update = update
