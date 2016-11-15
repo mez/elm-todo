@@ -128,7 +128,6 @@ view model =
             , buildMainSection model.todos model.currentFilter
             , buildFooter model.todos model.currentFilter
             ]
-        , h4 [] [ text <| toString model ]
         ]
 
 
