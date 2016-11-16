@@ -4,7 +4,6 @@ import Html exposing (Html, a, strong, span, footer, label, button, form, header
 import Html.Attributes exposing (autofocus, for, name, hidden, href, checked, type_, value, placeholder, class, classList)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import String
-import List exposing (filter, length, map)
 
 
 -- Model
