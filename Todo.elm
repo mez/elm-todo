@@ -4,6 +4,8 @@ import Html exposing (Html, a, strong, span, footer, label, button, form, header
 import Html.Attributes exposing (autofocus, for, name, hidden, href, checked, type_, value, placeholder, class, classList)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import String
+import Html.Keyed as Keyed
+import Html.Lazy exposing (lazy, lazy2)
 
 
 -- Model
@@ -123,9 +125,9 @@ view : Model -> Html Msg
 view model =
     div [ class "todomvc-wrapper" ]
         [ section [ class "todoapp" ]
-            [ buildHeader model.currentInput
-            , buildMainSection model.todos model.currentFilter
-            , buildFooter model.todos model.currentFilter
+            [ lazy buildHeader model.currentInput
+            , lazy2 buildMainSection model.todos model.currentFilter
+            , lazy2 buildFooter model.todos model.currentFilter
             ]
         ]
 
@@ -139,7 +141,7 @@ buildMainSection todos currentFilter =
         section [ hidden (List.length todos == 0), class "main" ]
             [ input [ onClick ToggleAllCompleted, checked allTodosDone, class "toggle-all", type_ "checkbox", name "toggle" ] []
             , label [ for "toggle-all" ] [ text "Mark all as complete." ]
-            , ul [ class "todo-list" ] <| buildTodoItems todos currentFilter
+            , Keyed.ul [ class "todo-list" ] <| buildTodoItems todos currentFilter
             ]
 
 
@@ -183,13 +185,14 @@ buildFooter todos currentFilter =
 
 buildVisibilityFilterButton : VisibilityFilter -> VisibilityFilter -> Html Msg
 buildVisibilityFilterButton currentSelectedFilter desiredFilter =
-    li [ onClick (ChangeVisibility desiredFilter) ]
+    lazy2 li
+        [ onClick (ChangeVisibility desiredFilter) ]
         [ a [ classList [ ( "selected", desiredFilter == currentSelectedFilter ) ] ]
             [ text <| toString desiredFilter ]
         ]
 
 
-buildTodoItems : List Todo -> VisibilityFilter -> List (Html Msg)
+buildTodoItems : List Todo -> VisibilityFilter -> List ( String, Html Msg )
 buildTodoItems todos currentFilter =
     let
         isVisible { isDone } =
@@ -204,7 +207,8 @@ buildTodoItems todos currentFilter =
                     isDone
 
         makeTodoItem todo =
-            li [ classList [ ( "completed", todo.isDone ) ] ]
+            ( toString <| todo.id
+            , li [ classList [ ( "completed", todo.isDone ) ] ]
                 [ div [ class "view" ]
                     [ input
                         [ class "toggle"
@@ -217,6 +221,7 @@ buildTodoItems todos currentFilter =
                     , button [ class "destroy", onClick (DestroyTodo todo.id) ] []
                     ]
                 ]
+            )
     in
         List.map makeTodoItem <| List.filter isVisible todos
 
