@@ -1,5 +1,7 @@
 module Update exposing (..)
 
+import Dom
+import Task
 import Model exposing (Msg(..), Model)
 
 
@@ -9,8 +11,24 @@ import Model exposing (Msg(..), Model)
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
         Input str ->
             ( { model | currentInput = str }, Cmd.none )
+
+        EditInput str ->
+            let
+                findAndUpdateTodoBody todo =
+                    if todo.editing then
+                        { todo | body = str }
+                    else
+                        todo
+
+                updatedTodos =
+                    List.map findAndUpdateTodoBody model.todos
+            in
+                ( { model | todos = updatedTodos }, Cmd.none )
 
         ToggleDone id ->
             let
@@ -68,15 +86,18 @@ update msg model =
             in
                 ( { model | todos = updatedTodos }, Cmd.none )
 
-        EditTodo id ->
+        ToggleEdit id ->
             let
                 findAndSetEditingTodo todo =
                     if todo.id == id then
-                        { todo | editing = True }
+                        { todo | editing = not todo.editing }
                     else
                         todo
 
                 updatedTodos =
                     List.map findAndSetEditingTodo model.todos
+
+                focus =
+                    Dom.focus ("todo-" ++ toString id)
             in
-                ( { model | todos = updatedTodos }, Cmd.none )
+                ( { model | todos = updatedTodos }, Task.attempt (always NoOp) focus )

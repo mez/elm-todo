@@ -1,8 +1,8 @@
 module View exposing (..)
 
 import Html exposing (Html, a, strong, span, footer, label, button, form, header, section, text, input, li, ul, div, h1, h4)
-import Html.Attributes exposing (autofocus, for, name, hidden, href, checked, type_, value, placeholder, class, classList)
-import Html.Events exposing (onClick, onInput, onSubmit, onDoubleClick)
+import Html.Attributes exposing (id, autofocus, for, name, hidden, href, checked, type_, value, placeholder, class, classList)
+import Html.Events exposing (onClick, onInput, onSubmit, onDoubleClick, onBlur)
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy, lazy2)
 import Model exposing (Model, Msg(..), Todo, VisibilityFilter(..))
@@ -96,10 +96,9 @@ buildTodoItems todos currentFilter =
                 Completed ->
                     isDone
 
-        makeTodoItem todo =
-            ( toString <| todo.id
-            , li [ classList [ ( "completed", todo.isDone ) ] ]
-                [ div [ class "view" ]
+        editOrView todo =
+            if not todo.editing then
+                div [ class "view" ]
                     [ input
                         [ class "toggle"
                         , type_ "checkbox"
@@ -110,7 +109,20 @@ buildTodoItems todos currentFilter =
                     , label [] [ text todo.body ]
                     , button [ class "destroy", onClick (DestroyTodo todo.id) ] []
                     ]
-                ]
+            else
+                input
+                    [ id <| "todo-" ++ (toString <| todo.id)
+                    , class "edit"
+                    , value todo.body
+                    , onBlur (ToggleEdit todo.id)
+                    , onInput EditInput
+                    ]
+                    []
+
+        makeTodoItem todo =
+            ( "todo-" ++ (toString <| todo.id)
+            , li [ classList [ ( "completed", todo.isDone ), ( "editing", todo.editing ) ], onDoubleClick (ToggleEdit todo.id) ]
+                [ editOrView todo ]
             )
     in
         List.map makeTodoItem <| List.filter isVisible todos

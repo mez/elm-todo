@@ -21,12 +21,13 @@ type alias Model =
     { todos : List Todo
     , currentFilter : VisibilityFilter
     , currentInput : String
+    , editInput : String
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model [] All "", Cmd.none )
+    ( Model [] All "" "", Cmd.none )
 
 
 
@@ -38,11 +39,13 @@ type alias TodoID =
 
 
 type Msg
-    = MakeNewTodo
+    = NoOp
+    | MakeNewTodo
     | ChangeVisibility VisibilityFilter
     | ToggleDone TodoID
     | ClearCompleted
     | Input String
+    | EditInput String
     | DestroyTodo TodoID
     | ToggleAllCompleted
-    | EditTodo TodoID
+    | ToggleEdit TodoID
