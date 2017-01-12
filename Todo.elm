@@ -1,4 +1,4 @@
-module Todo exposing (..)
+port module Todo exposing (..)
 
 import Html
 import Model exposing (Model, Msg(..), Todo, VisibilityFilter(..), init)
@@ -9,11 +9,25 @@ import View exposing (view)
 -- Main Program
 
 
-main : Program Never Model Msg
+port setStorage : List Todo -> Cmd msg
+
+
+updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+updateWithStorage msg model =
+    let
+        ( newModel, cmds ) =
+            update msg model
+    in
+        ( newModel
+        , Cmd.batch [ setStorage newModel.todos, cmds ]
+        )
+
+
+main : Program (List Todo) Model Msg
 main =
-    Html.program
+    Html.programWithFlags
         { init = init
         , view = view
-        , update = update
+        , update = updateWithStorage
         , subscriptions = (always Sub.none)
         }

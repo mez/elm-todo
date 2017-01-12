@@ -14,7 +14,13 @@
   <body>
 
     <script type="text/javascript">
-      var todo = Elm.Todo.fullscreen()
+      var storedState = localStorage.getItem('elm-todo-save');
+      var startingState = storedState ? JSON.parse(storedState) : [];
+      var todo = Elm.Todo.fullscreen(startingState);
+
+      todo.ports.setStorage.subscribe(function(state) {
+        localStorage.setItem('elm-todo-save', JSON.stringify(state));
+      });
     </script>
   </body>
 </html>

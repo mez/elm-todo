@@ -25,9 +25,9 @@ type alias Model =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( Model [] All "" "", Cmd.none )
+init : List Todo -> ( Model, Cmd Msg )
+init todos =
+    ( Model todos All "" "", Cmd.none )
 
 
 
